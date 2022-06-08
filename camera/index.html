@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Ứng dụng chụp hình đơn giản</title>
+        <style>	
+            * {padding: 0; margin: 0;}
+            .booth {width: 400px; height: auto; margin: 20px auto; padding: 10px; background-color: #f1f1f1; border: 1px solid #e5e5e5;}
+            .booth a {display: block; padding: 10px; text-align: center; background-color: #428bca; margin: 10px 0; font-size: 15px; color: #fff; text-decoration: none;}
+        </style>
+    </head>
+    <body>
+        <h1>Lưu ý: Ứng dụng demo sẽ không lưu online được</h1>
+        <!-- là nơi chứa toàn bộ ứng dụng. -->
+        <div class="booth">
+            <!-- là nơi chứa hình ảnh webcam -->
+            <video id="video" width="400" height="300"></video>
+            <!-- là nút Chụp ảnh. -->
+            <a href="#" id="capture" class="booth-capture-button">Chụp hình</a>
+            <!-- là nơi in hình ảnh khi nhấn Chụp ảnh. -->
+            <canvas id="canvas" width="400" height="300"></canvas>
+        </div><!-- div.booth -->
+        <script language="javascript" src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+        <script>
+            (function ()
+            {
+                // BƯỚC 1: KHỞI TẠO CÁC BIẾN
+                var video = document.getElementById('video');
+                var canvas = document.getElementById('canvas');
+                var context = canvas.getContext('2d');
+                var vendoUrl = window.URL || window.webkitURL;
+
+                // BƯỚC 2: XỬ LÝ HIỂN THỊ WEBCAM BAN ĐẦU
+                canvas.style.display = 'none'; // Ẩn thẻ canvas khi vừa tải trang
+
+                // Biến chưa hình ảnh webcame tuỳ theo loại từng trình duyệt
+                navigator.getMedia = navigator.getUserMedia ||
+                        navigator.webkitGetUserMedia ||
+                        navigator.mozGetUserMedia ||
+                        navigator.msGetUserMedia;
+
+                // Hàm lấy hình ảnh webcam
+                navigator.getMedia({
+                    video: true, // Có hình ảnh
+                    audio: false // Không có âm thanh
+                            // Hàm chèn đường dẫn webcam vào thẻ video
+                }, function (stream) {
+                    video.src = vendoUrl.createObjectURL(stream);
+                    video.play(); // Phát thẻ video
+                    // Hàm thông báo khi xảy lỗi hoặc không hỗ trợ trên trình duyệt này
+                }, function (error) {
+                    alert('Rất tiếc đã xảy ra lỗi, có thể do trình duyệt của bạn không hỗ trợ chức năng này hoặc tải lại trang và thử lại.');
+                });
+
+                // XỬ LÝ SỰ KIỆN CLICK VÀO NÚT CHỤP ẢNH
+                document.getElementById('capture').addEventListener('click', function ()
+                {
+                    canvas.style.display = 'block'; // Hiện thẻ canas
+                    // In hình ảnh lên thẻ canvas ở x = 0, y = 0, width = 400, height = 300
+                    context.drawImage(video, 0, 0, 400, 300);
+                    data = canvas.toDataURL(); // Tạo một đường dẫn hình ảnh của canvas
+                    // Gửi dữ liệu ảnh đến file saveimg.php thông qua phương thức POST
+                    $.ajax({
+                        type: "POST",
+                        url: "saveimg.php",
+                        data: {
+                            imgBase64: data
+                        }
+                        // Sau khi gửi dữ liệu thành công thì sẽ thêm nút Đi tới link ảnh 
+                    }).done(function (result) {
+                        $('.booth').append('<a href="' + result + '">Đi tới link ảnh</a>');
+                    });
+                });
+            })();
+        </script>
+    </body>
+</html>
